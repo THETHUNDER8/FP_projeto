@@ -414,9 +414,9 @@ void horizonte_temporal(t_data_hora data1, t_data_hora data2 ,t_inscricao v_incr
                     atividade5=atividade5+v_incricao[indice].valor_pago;
                 if(v_atividade[v_incricao[indice].ID_atividade_inscricao].tipo_atividade == 6)
                     atividade6=atividade6+v_incricao[indice].valor_pago;
-                soma_atividades=soma_atividades+atividade1+atividade2+atividade3+atividade4+atividade5+atividade6;
             }
     }
+        soma_atividades=atividade1+atividade2+atividade3+atividade4+atividade5+atividade6;
         printf("\n1-Académica:%2.f\n2-Lazer:%2.f\n3-Cultura:%2.f\n4-Desporto:%2.f\n5-Formação:%2.f\n6-Outra:%2.f\nTotal:%2.f\n",atividade1,atividade2,atividade3,atividade4,atividade5,atividade6,soma_atividades);
 }
 //grava no ficheiro os participantes
