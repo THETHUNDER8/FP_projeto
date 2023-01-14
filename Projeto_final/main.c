@@ -1,15 +1,11 @@
 /*
-*****************************************
-*Trablho para Fundamentos de programação
-*Trabalho realizado por:Hugo Gonçalves nº2220891
+***********************************************************************************************
+*Trabalho para Fundamentos de programação
+*Trabalho realizado por:Hugo Ferreira Gonçalves nº2220891
+*                     e: Duarte Luis Miguel Ferreira nº2220871
 *
-*
-*
-*
-*
-*
-*
-*******************************************
+*Trabalho realizado dia:14/1/2023
+**********************************************************************************************
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -67,7 +63,7 @@ void consultar_incricoes (t_inscricao v_inscricao[], int numero_inscricoes);
 //Funções estatisticas
 void n_atividades_associacao(t_atividade v_atividade[],int numero_atividades);
 void percentagem_inscricoes_escola(t_participantes v_participante[],t_inscricao v_incricao[],int numero_inscricoes);
-int horizonte_temporal();
+void horizonte_temporal();
 //Funções de leitura e gravação de ficheiros
 void gravar_fichero_participantes(t_participantes v_participante[], int numero_participantes);
 void gravar_fichero_atividades(t_atividade v_atividade[], int numero_atividades);
@@ -77,11 +73,10 @@ int ler_ficheiro_atividades(t_atividade v_atividade[]);
 int ler_ficheiro_inscricoes (t_inscricao v_inscricao[]);
 //Funções com apenas um objetivo
 int procura_NIF(t_participantes v_participante[], int tamanho,int min, int max);
-/*
-int procurar_no_vetor(int vetor[], int tamanho, int valor);
-int impede_numero_igual(struct t_estrutura vetor, int tamanho, int valor,int min, int max,char *campo );
-int verifica_numero_exite(int *vetor, int tamanho, int valor,int min, int max);
-*/
+int procura_contacto(t_participantes v_participante[], int tamanho,int min, int max);
+int procura_ID_participante(t_participantes v_participante[], int tamanho,int min, int max);
+int procura_ID_atividade(t_atividade v_atividade[], int tamanho,int min, int max);
+int registo_duplicado(t_inscricao v_inscricao[], int tamanho,int id_participante, int id_atividade);
 void data_hora_atual(t_data_hora *data_hora);
 int ler_numero(char *texto,int min, int max);
 float ler_preco(char *texto,int min, int max);
@@ -97,6 +92,8 @@ int main()
     t_participantes v_participante[MAX_PARTICIPANTES];
     t_atividade v_atividade[MAX_ATIVIDADES];
     t_inscricao v_inscricao[MAX_INSCRICOES];
+    t_data_hora comp_data1;
+    t_data_hora comp_data2;
     setlocale(LC_ALL,"Portuguese");
     do
     {
@@ -180,6 +177,23 @@ int main()
                 percentagem_inscricoes_escola(v_participante,v_inscricao, total_inscricoes);
             else
                 printf("\nERRO: sem participantes ou sem incricoes");
+            if (total_inscricoes>0)
+            {
+                    printf("\nValor total das inscrições entre duas datas (horizonte temporal) por tipo de atividade(inclusivo)\n");
+                    printf("\nPrimeira data:");
+                    comp_data1.dia=ler_numero("\nDia :",1,31);
+                    comp_data1.mes=ler_numero("\nMes :",1,12);
+                    comp_data1.ano=ler_numero("\nAno :",2023,2050);
+                    printf("\nSegunda data:");
+                    comp_data2.dia=ler_numero("\nDia :",1,31);
+                    comp_data2.mes=ler_numero("\nMes :",1,12);
+                    comp_data2.ano=ler_numero("\nAno :",2023,2050);
+                printf("Valor total das inscrições entre duas datas (horizonte temporal) por tipo de atividade(inclusivo)");
+                horizonte_temporal(comp_data1, comp_data2 ,v_inscricao,v_atividade,total_inscricoes);
+                printf("\n********************************************************\n");
+            }
+            else
+                printf("\nERRO: sem inscrições");
 
             break;
         case 8:
@@ -359,20 +373,19 @@ void n_atividades_associacao(t_atividade v_atividade[],int numero_atividades)
 void percentagem_inscricoes_escola(t_participantes v_participante[],t_inscricao v_incricao[],int numero_inscricoes)
 {
     float percentagem_escola1=0,percentagem_escola2=0,percentagem_escola3=0,percentagem_escola4=0,percentagem_escola5=0;
-    int indice=0, indice2=0;
+    int indice=0;
 
     for(indice=0; indice<numero_inscricoes; indice++)
     {
-        indice2=v_incricao[indice].ID_participante_inscricao;
-        if(v_participante[indice2].escola == 1)
+        if(v_participante[v_incricao[indice].ID_participante_inscricao].escola == 1)
             percentagem_escola1=percentagem_escola1+1;
-        if(v_participante[indice2].escola == 2)
+        if(v_participante[v_incricao[indice].ID_participante_inscricao].escola == 2)
             percentagem_escola2=percentagem_escola2+1;
-        if(v_participante[indice2].escola == 3)
+        if(v_participante[v_incricao[indice].ID_participante_inscricao].escola == 3)
             percentagem_escola3=percentagem_escola3+1;
-        if(v_participante[indice2].escola == 4)
+        if(v_participante[v_incricao[indice].ID_participante_inscricao].escola == 4)
             percentagem_escola4=percentagem_escola4+1;
-        if(v_participante[indice2].escola == 5)
+        if(v_participante[v_incricao[indice].ID_participante_inscricao].escola == 5)
             percentagem_escola5=percentagem_escola5+1;
     }
         printf("Percentagem de inscrições por escola");
@@ -380,9 +393,31 @@ void percentagem_inscricoes_escola(t_participantes v_participante[],t_inscricao 
                percentagem_escola3,percentagem_escola3/numero_inscricoes*100,percentagem_escola4,percentagem_escola4/numero_inscricoes*100,percentagem_escola5,percentagem_escola5/numero_inscricoes*100);
         printf("\n********************************************************\n");
 }
-int horizonte_temporal()
+//Valor total das inscrições entre duas datas(inclusivo) por tipo de atividade
+void horizonte_temporal(t_data_hora data1, t_data_hora data2 ,t_inscricao v_incricao[],t_atividade v_atividade[],int numero_incricoes)
 {
-
+    float atividade1=0,atividade2=0,atividade3=0,atividade4=0,atividade5=0,atividade6=0,soma_atividades=0;
+    int indice=0;
+    for(indice=0;indice<numero_incricoes;indice++)
+    {
+        if(data1.ano<=v_incricao[indice].data_hora_inscricao.ano && data2.ano>= v_incricao[indice].data_hora_inscricao.ano && data1.mes<=v_incricao[indice].data_hora_inscricao.mes && data2.mes>= v_incricao[indice].data_hora_inscricao.mes && data1.dia<=v_incricao[indice].data_hora_inscricao.dia && data2.dia>= v_incricao[indice].data_hora_inscricao.dia)
+            {
+                if(v_atividade[v_incricao[indice].ID_atividade_inscricao].tipo_atividade == 1)
+                    atividade1=atividade1+v_incricao[indice].valor_pago;
+                if(v_atividade[v_incricao[indice].ID_atividade_inscricao].tipo_atividade == 2)
+                    atividade2=atividade2+v_incricao[indice].valor_pago;
+                if(v_atividade[v_incricao[indice].ID_atividade_inscricao].tipo_atividade == 3)
+                    atividade3=atividade3+v_incricao[indice].valor_pago;
+                if(v_atividade[v_incricao[indice].ID_atividade_inscricao].tipo_atividade == 4)
+                    atividade4=atividade4+v_incricao[indice].valor_pago;
+                if(v_atividade[v_incricao[indice].ID_atividade_inscricao].tipo_atividade == 5)
+                    atividade5=atividade5+v_incricao[indice].valor_pago;
+                if(v_atividade[v_incricao[indice].ID_atividade_inscricao].tipo_atividade == 6)
+                    atividade6=atividade6+v_incricao[indice].valor_pago;
+                soma_atividades=soma_atividades+atividade1+atividade2+atividade3+atividade4+atividade5+atividade6;
+            }
+    }
+        printf("\n1-Académica:%2.f\n2-Lazer:%2.f\n3-Cultura:%2.f\n4-Desporto:%2.f\n5-Formação:%2.f\n6-Outra:%2.f\nTotal:%2.f\n",atividade1,atividade2,atividade3,atividade4,atividade5,atividade6,soma_atividades);
 }
 //grava no ficheiro os participantes
 void gravar_ficheiro_participantes(t_participantes v_participante[], int numero_participantes)
